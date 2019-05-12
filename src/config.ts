@@ -12,6 +12,8 @@ export const defaultConfig = {
   /** Bucket for images to run tests against */
   E2E_IMAGE_BUCKET: 'sample-bucket',
   IMAGE_BUCKET: 'sample-bucket',
+  // Real deployed URL for tests
+  API_UPLOAD_HANDLER_URL: '',
 }
 
 type defaultConfigKey = keyof typeof defaultConfig

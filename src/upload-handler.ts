@@ -1,6 +1,6 @@
 import { S3 } from 'aws-sdk'
 import * as t from 'io-ts'
-import { decode, urlToBucketName, urlToKeyName, ext, response, findPayload } from './util'
+import { decode, urlToBucketName, urlToKeyName, ext, apiResponse, findPayload } from './util'
 import { Context as LambdaContext, APIGatewayEvent, Callback as LambdaCallback } from 'aws-lambda'
 import { logger as log, logger } from './logger'
 import { config } from './config'
@@ -15,6 +15,16 @@ export const PRESIGNED_ACL = 'public-read'
  * Expiration for presigned links, in seconds
  */
 export const PRESIGNED_EXPIRATION = 60 * 5
+
+/**
+ * Minimum object size, in bytes
+ */
+export const PRESIGNED_MIN_SIZE = 100
+
+/**
+ * Maximum object size, in bytes
+ */
+export const PRESIGNED_MAX_SIZE = 1024 * 1024 * 10
 
 export const InputPayload = t.type({
   s3Url: t.string,
@@ -59,17 +69,17 @@ export const postHandler = (
     return generatePresignedUrl(input)
       .then(result => {
         logger.info(`Got result: ${JSON.stringify(result, null, 2)}`)
-        response(event, context, callback).success(result)
+        apiResponse(event, context, callback).success(result)
       })
       .catch(err => {
         log.warn('Failed to generate presigned URL form data', err)
-        response(event, context, callback).failure(
+        apiResponse(event, context, callback).failure(
           'Failed to generate presigned URL form data: ' + err,
         )
       })
   } catch (err) {
     logger.warn('Failed to generate presigned URL', err)
-    response(event, context, callback).failure(
+    apiResponse(event, context, callback).failure(
       'Exception when generating presigned URL: ' + err.message,
     )
   }
@@ -92,7 +102,7 @@ export const generatePresignedUrl = (input: Input) => {
         },
         Expires: PRESIGNED_EXPIRATION,
         Conditions: [
-          ['content-length-range', 0, 10000000], // 10 Mb
+          ['content-length-range', PRESIGNED_MIN_SIZE, PRESIGNED_MAX_SIZE],
           { acl: PRESIGNED_ACL },
         ],
       },
@@ -104,7 +114,9 @@ export const generatePresignedUrl = (input: Input) => {
         // fix newest policy of DNS name buckets
         // The bucket you are attempting to access must be addressed using the specified endpoint.
         // Please send all future requests to this endpoint.
-        data.url = `https://${urlToBucketName(input.s3Url)}.s3.amazonaws.com/`
+        const url = `https://${urlToBucketName(input.s3Url)}.s3-${config.AWS_REGION}.amazonaws.com/`
+        logger.info(`Replacing ${data.url} with ${url}`)
+        data.url = url
 
         resolve({
           ...data,

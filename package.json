@@ -27,6 +27,7 @@
     "@types/mime": "^2.0.1",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.5",
+    "@types/node-fetch": "^2.3.3",
     "@types/ramda": "^0.26.8",
     "@types/sharp": "^0.22.1",
     "form-data": "^2.3.3",
@@ -53,8 +54,9 @@
     "build": "tsc -p .",
     "format": "prettier \"src/**/*.{js,ts,tsx}\" --write",
     "lint": "ts-node node_modules/.bin/tslint -p . -t verbose",
-    "test": "mocha -r ts-node/register --extension ts \"src/**/*.spec.ts\"",
-    "deploy": "serverless deploy"
+    "test": "chamber exec find-face/test1 -- mocha -r ts-node/register --extension ts \"src/**/*.spec.ts\"",
+    "deploy": "chamber exec find-face/test1 -- serverless deploy",
+    "serverless": "chamber exec find-face/test1 -- serverless"
   },
   "prettier": {
     "semi": false,
