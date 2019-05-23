@@ -18,7 +18,7 @@
     "mime": "^2.4.2",
     "ramda": "^0.26.1",
     "source-map-support": "^0.5.12",
-    "winston": "^2"
+    "winston": "^3"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.24",
